@@ -63,46 +63,48 @@ def measure_roi(roi,cThr=[100,100]):
       cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
             # loop over the original points and draw them
       for (x, y) in box:
+          print(x, y)
           cv2.circle(orig, (int(x), int(y)), 5, (0, 0, 255), -1)
                 # unpack the ordered bounding box, then compute the midpoint
                 # between the top-left and top-right coordinates, followed by
                 # the midpoint between bottom-left and bottom-right coordinates
-          (tl, tr, br, bl) = box
+      (tl, tr, br, bl) = box
 
-          (tltrX, tltrY) = midpoint(tl, tr)
-          (blbrX, blbrY) = midpoint(bl, br)
-            # compute the midpoint between the top-left and top-right points,
-            # followed by the midpoint between the top-righ and bottom-right
-          (tlblX, tlblY) = midpoint(tl, bl)
-          (trbrX, trbrY) = midpoint(tr, br)
-            # draw the midpoints on the image
-          cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
-          cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
-          cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
-          cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
-            # draw lines between the midpoints
-          cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
-                     (255, 0, 255), 2)
-          cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
-                     (255, 0, 255), 2)
-            # compute the Euclidean distance between the midpoints
-          dB = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
-          dA = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
-            # if the pixels per metric has not been initialized, then
-            # compute it as the ratio of pixels to supplied metric
-            # (in this case, inches)
-          if pixelsPerMetric is None:
-              pixelsPerMetric = dB / 5
-            # compute the size of the object
-          dimA = dA / pixelsPerMetric
-          dimB = dB / pixelsPerMetric
-            # draw the object sizes on the image
-          cv2.putText(orig, "{:.1f}mm".format(dimA),
-                        (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.65, (255, 255, 255), 2)
-          cv2.putText(orig, "{:.1f}mm".format(dimB),
-                        (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.65, (255, 255, 255), 2)
+      (tltrX, tltrY) = midpoint(tl, tr)
+      (blbrX, blbrY) = midpoint(bl, br)
+        # compute the midpoint between the top-left and top-right points,
+        # followed by the midpoint between the top-righ and bottom-right
+      (tlblX, tlblY) = midpoint(tl, bl)
+      (trbrX, trbrY) = midpoint(tr, br)
+      #   # draw the midpoints on the image
+      # cv2.circle(orig, (int(tltrX), int(tltrY)), 5, (255, 0, 0), -1)
+      # cv2.circle(orig, (int(blbrX), int(blbrY)), 5, (255, 0, 0), -1)
+      # cv2.circle(orig, (int(tlblX), int(tlblY)), 5, (255, 0, 0), -1)
+      # cv2.circle(orig, (int(trbrX), int(trbrY)), 5, (255, 0, 0), -1)
+      #   # draw lines between the midpoints
+      # cv2.line(orig, (int(tltrX), int(tltrY)), (int(blbrX), int(blbrY)),
+      #            (255, 0, 255), 2)
+      # cv2.line(orig, (int(tlblX), int(tlblY)), (int(trbrX), int(trbrY)),
+      #            (255, 0, 255), 2)
+        # compute the Euclidean distance between the midpoints
+      dB = dist.euclidean((tltrX, tltrY), (blbrX, blbrY))
+      dA = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
+        # if the pixels per metric has not been initialized, then
+        # compute it as the ratio of pixels to supplied metric
+        # (in this case, inches)
+      if pixelsPerMetric is None:
+          pixelsPerMetric = dB / 5
+        # compute the size of the object
+      dimA = dA / pixelsPerMetric
+      dimB = dB / pixelsPerMetric
+      print(dimA)
+          #   # draw the object sizes on the image
+          # cv2.putText(orig, "{:.1f}mm".format(dimA),
+          #               (int(tltrX - 15), int(tltrY - 10)), cv2.FONT_HERSHEY_SIMPLEX,
+          #               0.65, (255, 255, 255), 2)
+          # cv2.putText(orig, "{:.1f}mm".format(dimB),
+          #               (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX,
+          #               0.65, (255, 255, 255), 2)
 
           # cv2.imshow("Image"+ str(i), orig)
   except Exception as e:
@@ -127,8 +129,8 @@ print("[INFO] loading YOLO from disk...")
 net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 
 # load our input image and grab its spatial dimensions
-image = cv2.imread("./images/32.jpg")
-image2 = Image.open("./images/32.jpg")
+image = cv2.imread("./images/opencv_frame_0.jpg")
+image2 = Image.open("./images/opencv_frame_0.jpg")
 (H, W) = image.shape[:2]
 print(H)
 print(W)
@@ -192,7 +194,7 @@ Rcount=0
 if len(idxs) > 0:
 	# loop over the indexes we are keeping
 	for i in idxs.flatten():
-		
+		print("i = ", i)
 		detected_class = classIDs[i]
 		#print(detected_class)
 		if detected_class == 0:
@@ -216,14 +218,14 @@ if len(idxs) > 0:
 			
 
 			roi = image_np1[y:y+h,x:x+w]
-			# measure_roi(roi)
+			measure_roi(roi)
 
 		if detected_class == 1:
 			Rcount = Rcount +1
                         # extract the bounding box coordinates
 			(x, y) = (boxes[i][0], boxes[i][1])
 			(w, h) = (boxes[i][2], boxes[i][3])
-			print(y,x,h,w)
+			# print(y,x,h,w)
 			# draw a bounding box rectangle and label on the image
 			color = [int(c) for c in COLORS[classIDs[i]]]
 			cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
@@ -239,5 +241,4 @@ print(Acount)
 print(Rcount)
 # show the output image
 cv2.imshow("Image", image)
-cv2.imwrite("output.jpg", image)
 cv2.waitKey(0)
