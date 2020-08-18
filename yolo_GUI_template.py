@@ -146,7 +146,8 @@ def measure_roi(roi,cThr=[100,100]):
 
 # Grab images from the camera (separate thread)
 def grab_images(cam_num, queue):
-    cap = cv2.VideoCapture("videos\VID5.mp4") #cam_num-1 + CAP_API
+    # cap = cv2.VideoCapture("videos\VID5.mp4") #cam_num-1 + CAP_API
+    cap = cv2.VideoCapture(cam_num-1 + CAP_API)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, IMG_SIZE[0])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, IMG_SIZE[1])
     if EXPOSURE:
@@ -212,7 +213,6 @@ def grab_images(cam_num, queue):
                 # apply non-maxima suppression to suppress weak, overlapping bounding
                 # boxes                
                 idxs = cv2.dnn.NMSBoxes(boxes, confidences, 0.5,0.3)
-                print(len(idxs))
                 # ensure at least one detection exists
                 if len(idxs) > 0:
                     # loop over the indexes we are keeping
@@ -243,7 +243,6 @@ def grab_images(cam_num, queue):
                             # extract the bounding box coordinates
                             (x, y) = (boxes[i][0], boxes[i][1])
                             (w, h) = (boxes[i][2], boxes[i][3])
-                            print(y,x,h,w)
                             # draw a bounding box rectangle and label on the image
                             color = [int(c) for c in COLORS[classIDs[i]]]
                             cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
@@ -446,15 +445,11 @@ class MyWindow(QMainWindow):
 
     # Display an image, reduce size if required
     def display_image(self, img, display, scale=1):
-        print(list(Grade1count_queue.queue))
-        print(list(Grade2count_queue.queue))
-        print(list(Grade3count_queue.queue))
         Acount = Acount_queue.get()
         Rcount = Rcount_queue.get()
         Grade1count = Grade1count_queue.get()
         Grade2count = Grade2count_queue.get()
         Grade3count = Grade3count_queue.get()
-        print(Acount, Rcount, Grade1count, Grade2count, Grade3count)
 
         disp_size = img.shape[1]//scale, img.shape[0]//scale
         disp_bpl = disp_size[0] * 3
