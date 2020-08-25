@@ -5,7 +5,8 @@ import os
 import sys
 import imutils
 import math
-
+from datetime import datetime
+import csv
 
 from array import *
 from PIL import Image
@@ -133,8 +134,8 @@ def measure_roi(roi,cThr=[100,100]):
 
 # Grab images from the camera (separate thread)
 def grab_images(cam_num, queue):
-    # cap = cv2.VideoCapture("videos\VID5.mp4") #cam_/num-1 + CAP_API
-    cap = cv2.VideoCapture(cam_num-1 + CAP_API)
+    cap = cv2.VideoCapture("videos\VID5.mp4") #cam_/num-1 + CAP_API
+    # cap = cv2.VideoCapture(cam_num-1 + CAP_API)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, IMG_SIZE[0])
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, IMG_SIZE[1])
     if EXPOSURE:
@@ -185,6 +186,18 @@ class MyWindow(QMainWindow):
         self.image_path = ""
         self.from_camera = True
         self.image = None
+
+        self.BASE_DIR = './output'
+        if not os.path.exists(self.BASE_DIR):
+            os.makedirs(self.BASE_DIR)
+        
+        self.EXTENSION = 'jpg'
+        self.file_name_format = "{:s}-{:%Y%m%d_%H%M%S}.{:s}"
+        self.src_prefix = "src"
+        self.rst_prefix = "rst"
+        self.csv_file = os.path.join(self.BASE_DIR, 'output.csv')
+
+
 
         self.setFixedHeight(875)
         self.setFixedWidth(680)
@@ -466,27 +479,65 @@ class MyWindow(QMainWindow):
                     
             img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             self.display_image(img, self.disp, DISP_SCALE)
+
         
-        total_count = Acount+Rcount
-        self.total_counts.setText(str(Acount+Rcount))
-        if total_count > 0:
-            self.accepted_percent.setText(str(round(Acount*100/(Acount+Rcount), 1)))
-        else:
-            self.accepted_percent.setText('0')
-        if Acount > 0:
-            self.g1_percent.setText(str(round(Grade1count*100/Acount, 1)))
-            self.g2_percent.setText(str(round(Grade2count*100/Acount, 1)))
-            self.g3_percent.setText(str(round(Grade3count*100/Acount, 1)))
-        else:
-            self.g1_percent.setText('0')
-            self.g2_percent.setText('0')
-            self.g3_percent.setText('0')
-        self.g1_bill.setText(str(Grade1count))
-        self.g2_bill.setText(str(Grade2count))
-        self.g3_bill.setText(str(Grade3count))
-        self.total_bill.setText(str(Grade1count + Grade2count + Grade3count))
+            total_count = Acount+Rcount
+            self.total_counts.setText(str(total_count))
+            accepted_percent = 0
+            if total_count > 0:
+                accepted_percent = round(Acount*100/(Acount+Rcount), 1)
+            self.accepted_percent.setText(str(accepted_percent))
+            g1_percent = 0
+            g2_percent = 0
+            g3_percent = 0
+            if Acount > 0:
+                g1_percent = round(Grade1count*100/Acount, 1)
+                g2_percent = round(Grade2count*100/Acount, 1)
+                g3_percent = round(Grade3count*100/Acount, 1)
+            self.g1_percent.setText(str(g1_percent))
+            self.g2_percent.setText(str(g2_percent))
+            self.g3_percent.setText(str(g3_percent))
 
+            self.g1_bill.setText(str(Grade1count))
+            self.g2_bill.setText(str(Grade2count))
+            self.g3_bill.setText(str(Grade3count))
+            total_bill = Grade1count + Grade2count + Grade3count
+            self.total_bill.setText(str(total_bill))
 
+            # save images of source and result
+            if not os.path.exists(self.BASE_DIR):
+                os.makedirs(self.BASE_DIR)
+
+            date = datetime.now()
+            src_file_name = self.file_name_format.format(self.src_prefix, date, self.EXTENSION)
+            rst_file_name = self.file_name_format.format(self.rst_prefix, date, self.EXTENSION)
+            src_file_name = os.path.join(self.BASE_DIR, src_file_name)
+            rst_file_name = os.path.join(self.BASE_DIR, rst_file_name)
+            cv2.imwrite(src_file_name, image2)
+            cv2.imwrite(rst_file_name, image)
+
+            # save csv file
+
+            exist_csv_file = os.path.isfile(self.csv_file)
+            with open(self.csv_file,'a') as myfile:
+                headers = ['Source File Name', 'Result File Name', 'Total Gherkins Count', 'Accepted Percentage', 
+                    'Grade1 Percentage', 'Grade1 bill', 'Grade2 Percentage', 'Grade2 bill', 
+                    'Grade3 Percentage', 'Grade3 bill', 'Total bill']
+                writer = csv.DictWriter(myfile, delimiter=',', lineterminator='\n',fieldnames=headers)
+                if not exist_csv_file:
+                    writer.writeheader()  # file doesn't exist yet, write a header
+                writer.writerow({
+                            'Source File Name': src_file_name,
+                            'Result File Name': rst_file_name,
+                            'Total Gherkins Count': total_count, 
+                            'Accepted Percentage': accepted_percent, 
+                            'Grade1 Percentage': g1_percent, 
+                            'Grade1 bill': Grade1count, 
+                            'Grade2 Percentage': g2_percent, 
+                            'Grade2 bill': Grade2count, 
+                            'Grade3 Percentage': g3_percent, 
+                            'Grade3 bill': Grade3count, 
+                            'Total bill': total_bill})
     def browse(self):
         if self.from_camera:
             display_error_message("Please select image mode")
